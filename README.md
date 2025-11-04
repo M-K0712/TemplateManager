@@ -120,4 +120,4 @@ MIT License
 
 ## 作者
 
-Kento
+Pomio
