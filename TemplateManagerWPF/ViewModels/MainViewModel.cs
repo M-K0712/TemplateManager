@@ -42,6 +42,22 @@ public partial class MainViewModel : ObservableObject
     private string _searchKeyword = string.Empty;
 
     /// <summary>
+    /// 検索対象
+    /// </summary>
+    [ObservableProperty]
+    private string _searchTarget = "タイトル";
+
+    /// <summary>
+    /// 検索対象の選択肢
+    /// </summary>
+    public ObservableCollection<string> SearchTargets { get; } = new ObservableCollection<string>
+    {
+        "タイトル",
+        "概要",
+        "本文"
+    };
+
+    /// <summary>
     /// セクション一覧
     /// </summary>
     [ObservableProperty]
@@ -126,9 +142,25 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
-            var results = _repository.Search(SearchKeyword);
+            var allTemplates = _repository.GetAll();
+
+            if (string.IsNullOrWhiteSpace(SearchKeyword))
+            {
+                Templates = new ObservableCollection<Template>(allTemplates);
+                StatusMessage = $"全件表示: {Templates.Count} 件";
+                return;
+            }
+
+            var results = SearchTarget switch
+            {
+                "タイトル" => allTemplates.Where(t => t.Title.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase)).ToList(),
+                "概要" => allTemplates.Where(t => t.Summary.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase)).ToList(),
+                "本文" => allTemplates.Where(t => t.Body.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase)).ToList(),
+                _ => allTemplates.Where(t => t.Title.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase)).ToList()
+            };
+
             Templates = new ObservableCollection<Template>(results);
-            StatusMessage = $"検索結果: {Templates.Count} 件";
+            StatusMessage = $"検索結果({SearchTarget}): {Templates.Count} 件";
         }
         catch (Exception ex)
         {

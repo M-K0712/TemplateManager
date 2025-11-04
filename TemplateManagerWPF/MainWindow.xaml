@@ -5,9 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TemplateManagerWPF"
         xmlns:vm="clr-namespace:TemplateManagerWPF.ViewModels"
+        xmlns:converters="clr-namespace:TemplateManagerWPF.Converters"
         mc:Ignorable="d"
         Title="定型文管理システム" Height="600" Width="900">
-    
+
+    <Window.Resources>
+        <converters:EmptySummaryConverter x:Key="EmptySummaryConverter"/>
+    </Window.Resources>
+
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
@@ -15,52 +20,52 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
-        <!-- タイトル -->
-        <TextBlock Grid.Row="0" 
-                   Text="定型文管理システム" 
-                   FontSize="24" 
-                   FontWeight="Bold" 
-                   Margin="0,0,0,10"/>
-        
+
         <!-- 検索エリア -->
-        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
             <!-- 検索キーワード -->
             <Grid Margin="0,0,0,5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="100"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="100"/>
                     <ColumnDefinition Width="100"/>
                 </Grid.ColumnDefinitions>
-                
-                <TextBlock Grid.Column="0" 
-                           Text="検索:" 
-                           VerticalAlignment="Center" 
+
+                <TextBlock Grid.Column="0"
+                           Text="検索:"
+                           VerticalAlignment="Center"
                            FontSize="14"/>
-                
-                <TextBox Grid.Column="1" 
-                         Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
-                         FontSize="14" 
+
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding SearchTargets}"
+                          SelectedItem="{Binding SearchTarget}"
+                          FontSize="14"
+                          Padding="5"
+                          Margin="0,0,5,0"/>
+
+                <TextBox Grid.Column="2"
+                         Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="14"
                          Padding="5"
                          Margin="0,0,5,0"/>
-                
-                <Button Grid.Column="2" 
-                        Command="{Binding SearchCommand}" 
-                        Content="検索" 
-                        FontSize="14" 
+
+                <Button Grid.Column="3"
+                        Command="{Binding SearchCommand}"
+                        Content="検索"
+                        FontSize="14"
                         Padding="5"
                         Margin="0,0,5,0"/>
-                
-                <Button Grid.Column="3" 
-                        Command="{Binding ShowAllCommand}" 
-                        Content="全件表示" 
-                        FontSize="14" 
+
+                <Button Grid.Column="4"
+                        Command="{Binding ShowAllCommand}"
+                        Content="全件表示"
+                        FontSize="14"
                         Padding="5"/>
             </Grid>
             
@@ -85,40 +90,49 @@
         </StackPanel>
         
         <!-- メインエリア（左右分割） -->
-        <Grid Grid.Row="2" Margin="0,0,0,10">
+        <Grid Grid.Row="1" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="3*"/>
             </Grid.ColumnDefinitions>
 
             <!-- 左側: 定型文リスト -->
             <Border Grid.Column="0"
                     BorderBrush="Gray"
-                    BorderThickness="1">
+                    BorderThickness="1"
+                    Margin="0,0,5,0">
                 <ListBox ItemsSource="{Binding Templates}"
                          SelectedItem="{Binding SelectedTemplate}"
                          FontSize="14">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Margin="5">
-                                <TextBlock Text="{Binding Title}"
+                            <Grid Margin="5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0"
+                                           Text="{Binding Title}"
                                            FontWeight="Bold"
                                            FontSize="14"/>
-                                <TextBlock Text="{Binding Section}"
+                                <TextBlock Grid.Row="1"
+                                           Text="{Binding Summary, Converter={StaticResource EmptySummaryConverter}}"
                                            Foreground="Gray"
                                            FontSize="12"/>
-                            </StackPanel>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Border>
 
-            <!-- 分割線 -->
+            <!-- 分割線（ドラッグ可能） -->
             <GridSplitter Grid.Column="1"
                           Width="5"
-                          HorizontalAlignment="Stretch"
-                          Background="LightGray"/>
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          Background="LightGray"
+                          Margin="5,0,5,0"/>
 
             <!-- 右側: 編集エリア -->
             <Grid Grid.Column="2">
@@ -155,7 +169,7 @@
         </Grid>
         
         <!-- 操作ボタン -->
-        <StackPanel Grid.Row="3"
+        <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Center"
                     Margin="0,0,0,10">
@@ -177,7 +191,7 @@
         </StackPanel>
         
         <!-- ステータスバー -->
-        <Border Grid.Row="4" 
+        <Border Grid.Row="3" 
                 Background="LightGray" 
                 Padding="10,5">
             <TextBlock Text="{Binding StatusMessage}" 

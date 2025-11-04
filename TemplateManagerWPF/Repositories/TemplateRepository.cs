@@ -179,6 +179,7 @@ public class TemplateRepository
         existing.Title = template.Title;
         existing.Body = template.Body;
         existing.Section = template.Section;
+        existing.Summary = template.Summary;
         existing.UpdatedAt = DateTime.Now;
 
         SaveToJson();

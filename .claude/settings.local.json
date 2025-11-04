@@ -29,7 +29,21 @@
       "Bash(cat:*)",
       "mcp__notion__notion-update-page",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: 定型文管理アプリ (WPF MVVM)\n\n実装機能:\n- 定型文の一覧表示・検索・フィルタリング\n- 一時編集機能（元データは保持）\n- クリップボードへのコピー\n- 新規登録・編集・削除（確認ダイアログ付き）\n\n技術スタック:\n- .NET 8.0 WPF\n- MVVM パターン\n- CommunityToolkit.Mvvm (Source Generator)\n- TextCopy (クリップボード操作)\n- System.Text.Json (データ永続化)\n\nアーキテクチャ:\n- Model: Template, TemplateData\n- View: MainWindow, TemplateEditorWindow\n- ViewModel: MainViewModel\n- Repository: TemplateRepository\n- Helper: ClipboardHelper\n\nリファクタリング:\n- 無限ループ防止 (_isInitializing フラグ)\n- 削除確認ダイアログ\n- データバインディング衝突の解決\n- エラーハンドリングの徹底\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(dotnet publish:*)",
+      "Bash(gh:*)",
+      "Bash(ls:*)",
+      "Bash(if [ -f \"$USERPROFILE/Documents/TemplateManager/templates.json\" ])",
+      "Bash(then echo \"Found!\")",
+      "Bash(else echo \"Not found. Please run the app first.\")",
+      "Bash(fi)",
+      "mcp__notion__notion-create-pages",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet run)"
     ],
     "deny": [],
     "ask": []

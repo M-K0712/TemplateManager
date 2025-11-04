@@ -57,6 +57,7 @@ public partial class TemplateEditorWindow : Window
         // 既存の値を設定
         TitleTextBox.Text = template.Title;
         SectionComboBox.Text = template.Section;
+        SummaryTextBox.Text = template.Summary;
         BodyTextBox.Text = template.Body;
     }
 
@@ -93,6 +94,7 @@ public partial class TemplateEditorWindow : Window
                 Id = _originalTemplate.Id,
                 Title = TitleTextBox.Text.Trim(),
                 Section = SectionComboBox.Text.Trim(),
+                Summary = SummaryTextBox.Text.Trim(),
                 Body = BodyTextBox.Text,
                 CreatedAt = _originalTemplate.CreatedAt,
                 UpdatedAt = _originalTemplate.UpdatedAt // Repositoryで更新される
@@ -105,6 +107,7 @@ public partial class TemplateEditorWindow : Window
             {
                 Title = TitleTextBox.Text.Trim(),
                 Section = SectionComboBox.Text.Trim(),
+                Summary = SummaryTextBox.Text.Trim(),
                 Body = BodyTextBox.Text
                 // Id, CreatedAt, UpdatedAtはRepositoryで設定される
             };
