@@ -2,8 +2,23 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:TemplateManagerWPF"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Material Design -->
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Blue" SecondaryColor="Indigo" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- カスタムカラー #87cefa (Light Sky Blue) -->
+            <SolidColorBrush x:Key="PrimaryHueLightBrush" Color="#b0e0ff"/>
+            <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="#87cefa"/>
+            <SolidColorBrush x:Key="PrimaryHueDarkBrush" Color="#5fa8d3"/>
+            <SolidColorBrush x:Key="MaterialDesign.Brush.Primary" Color="#87cefa"/>
+            <SolidColorBrush x:Key="MaterialDesign.Brush.Primary.Light" Color="#b0e0ff"/>
+            <SolidColorBrush x:Key="MaterialDesign.Brush.Primary.Dark" Color="#5fa8d3"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

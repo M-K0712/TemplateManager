@@ -6,8 +6,17 @@
         xmlns:local="clr-namespace:TemplateManagerWPF"
         xmlns:vm="clr-namespace:TemplateManagerWPF.ViewModels"
         xmlns:converters="clr-namespace:TemplateManagerWPF.Converters"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="定型文管理システム" Height="600" Width="900">
+        Title="定型文管理システム"
+        Height="650" Width="1000"
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
+        FontFamily="{materialDesign:MaterialDesignFont}"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto">
 
     <Window.Resources>
         <converters:EmptySummaryConverter x:Key="EmptySummaryConverter"/>
@@ -17,7 +26,7 @@
         <vm:MainViewModel />
     </Window.DataContext>
     
-    <Grid Margin="10">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -26,71 +35,71 @@
         </Grid.RowDefinitions>
 
         <!-- 検索エリア -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <!-- 検索キーワード -->
-            <Grid Margin="0,0,0,5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="100"/>
-                </Grid.ColumnDefinitions>
+        <materialDesign:Card Grid.Row="0" Margin="0,0,0,16" Padding="16">
+            <StackPanel>
+                <!-- 検索キーワード -->
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0"
-                           Text="検索:"
-                           VerticalAlignment="Center"
-                           FontSize="14"/>
+                    <TextBlock Grid.Column="0"
+                               Text="検索"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
 
-                <ComboBox Grid.Column="1"
-                          ItemsSource="{Binding SearchTargets}"
-                          SelectedItem="{Binding SearchTarget}"
-                          FontSize="14"
-                          Padding="5"
-                          Margin="0,0,5,0"/>
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding SearchTargets}"
+                              SelectedItem="{Binding SearchTarget}"
+                              Margin="0,0,8,0"
+                              materialDesign:HintAssist.Hint="検索対象"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
-                <TextBox Grid.Column="2"
-                         Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
-                         FontSize="14"
-                         Padding="5"
-                         Margin="0,0,5,0"/>
+                    <TextBox Grid.Column="2"
+                             Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,0,8,0"
+                             materialDesign:HintAssist.Hint="キーワードを入力"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
-                <Button Grid.Column="3"
-                        Command="{Binding SearchCommand}"
-                        Content="検索"
-                        FontSize="14"
-                        Padding="5"
-                        Margin="0,0,5,0"/>
+                    <Button Grid.Column="3"
+                            Command="{Binding SearchCommand}"
+                            Content="検索"
+                            Margin="0,0,8,0"
+                            Style="{StaticResource MaterialDesignRaisedButton}"/>
 
-                <Button Grid.Column="4"
-                        Command="{Binding ShowAllCommand}"
-                        Content="全件表示"
-                        FontSize="14"
-                        Padding="5"/>
-            </Grid>
-            
-            <!-- セクション選択 -->
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                
-                <TextBlock Grid.Column="0" 
-                           Text="セクション:" 
-                           VerticalAlignment="Center" 
-                           FontSize="14"/>
-                
-                <ComboBox Grid.Column="1"
-                          ItemsSource="{Binding Sections}"
-                          SelectedItem="{Binding SelectedSection}"
-                          FontSize="14"
-                          Padding="5"/>
-            </Grid>
-        </StackPanel>
+                    <Button Grid.Column="4"
+                            Command="{Binding ShowAllCommand}"
+                            Content="全件表示"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                </Grid>
+
+                <!-- セクション選択 -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="セクション"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding Sections}"
+                              SelectedItem="{Binding SelectedSection}"
+                              materialDesign:HintAssist.Hint="セクションを選択"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                </Grid>
+            </StackPanel>
+        </materialDesign:Card>
         
         <!-- メインエリア（左右分割） -->
-        <Grid Grid.Row="1" Margin="0,0,0,10">
+        <Grid Grid.Row="1" Margin="0,0,0,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -98,104 +107,127 @@
             </Grid.ColumnDefinitions>
 
             <!-- 左側: 定型文リスト -->
-            <Border Grid.Column="0"
-                    BorderBrush="Gray"
-                    BorderThickness="1"
-                    Margin="0,0,5,0">
+            <materialDesign:Card Grid.Column="0" Margin="0,0,8,0">
                 <ListBox ItemsSource="{Binding Templates}"
                          SelectedItem="{Binding SelectedTemplate}"
-                         FontSize="14">
+                         Style="{StaticResource MaterialDesignListBox}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="5">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0"
-                                           Text="{Binding Title}"
-                                           FontWeight="Bold"
-                                           FontSize="14"/>
-                                <TextBlock Grid.Row="1"
-                                           Text="{Binding Summary, Converter={StaticResource EmptySummaryConverter}}"
-                                           Foreground="Gray"
-                                           FontSize="12"/>
-                            </Grid>
+                            <StackPanel Margin="8">
+                                <TextBlock Text="{Binding Title}"
+                                           Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                           FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Summary, Converter={StaticResource EmptySummaryConverter}}"
+                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                           Foreground="{DynamicResource MaterialDesign.Brush.Foreground.Light}"
+                                           Margin="0,4,0,0"/>
+                            </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-            </Border>
+            </materialDesign:Card>
 
             <!-- 分割線（ドラッグ可能） -->
             <GridSplitter Grid.Column="1"
                           Width="5"
                           HorizontalAlignment="Center"
                           VerticalAlignment="Stretch"
-                          Background="LightGray"
-                          Margin="5,0,5,0"/>
+                          Background="{DynamicResource MaterialDesign.Brush.TextBox.HoverBorder}"/>
 
             <!-- 右側: 編集エリア -->
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+            <materialDesign:Card Grid.Column="2" Margin="8,0,0,0" Padding="16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0"
-                           Text="編集エリア（コピー前に自由に編集できます）"
-                           FontWeight="Bold"
-                           Margin="5"/>
+                    <TextBlock Grid.Row="0"
+                               Text="編集エリア（コピー前に自由に編集できます）"
+                               Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                               Margin="0,0,0,8"/>
 
-                <Border Grid.Row="1"
-                        BorderBrush="Gray"
-                        BorderThickness="1"
-                        Margin="5">
-                    <TextBox Text="{Binding EditableBody, UpdateSourceTrigger=PropertyChanged}"
+                    <TextBox Grid.Row="1"
+                             Text="{Binding EditableBody, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Auto"
-                             FontSize="14"
-                             Padding="5"/>
-                </Border>
+                             Margin="0,0,0,16"
+                             materialDesign:HintAssist.Hint="ここで自由に編集できます"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             MinLines="10"/>
 
-                <Button Grid.Row="2"
-                        Command="{Binding CopyToClipboardCommand}"
-                        Content="クリップボードにコピー"
-                        FontSize="14"
-                        Padding="10"
-                        Margin="5"/>
-            </Grid>
+                    <Button Grid.Row="2"
+                            Command="{Binding CopyToClipboardCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="40">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentCopy"
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,8,0"/>
+                            <TextBlock Text="クリップボードにコピー"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </materialDesign:Card>
         </Grid>
         
         <!-- 操作ボタン -->
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Center"
-                    Margin="0,0,0,10">
+                    Margin="0,0,0,16">
             <Button Command="{Binding AddTemplateCommand}"
-                    Content="新規登録"
-                    Width="100"
-                    Padding="10,5"
-                    Margin="5"/>
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Height="40"
+                    Margin="0,0,8,0">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Plus"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,8,0"/>
+                    <TextBlock Text="新規登録"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
             <Button Command="{Binding EditTemplateCommand}"
-                    Content="定型文を編集して保存"
-                    Width="150"
-                    Padding="10,5"
-                    Margin="5"/>
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Height="40"
+                    Margin="0,0,8,0">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Pencil"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,8,0"/>
+                    <TextBlock Text="定型文を編集して保存"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
             <Button Command="{Binding DeleteTemplateCommand}"
-                    Content="削除"
-                    Width="100"
-                    Padding="10,5"
-                    Margin="5"/>
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    materialDesign:ButtonAssist.CornerRadius="4"
+                    Background="#D32F2F"
+                    BorderBrush="#D32F2F"
+                    Foreground="White"
+                    Height="40">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Delete"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,8,0"
+                                             Foreground="White"/>
+                    <TextBlock Text="削除"
+                               VerticalAlignment="Center"
+                               Foreground="White"/>
+                </StackPanel>
+            </Button>
         </StackPanel>
-        
+
         <!-- ステータスバー -->
-        <Border Grid.Row="3" 
-                Background="LightGray" 
-                Padding="10,5">
-            <TextBlock Text="{Binding StatusMessage}" 
-                       FontSize="12"/>
-        </Border>
+        <materialDesign:ColorZone Grid.Row="3"
+                                   Mode="PrimaryMid"
+                                   Padding="12,8">
+            <TextBlock Text="{Binding StatusMessage}"
+                       VerticalAlignment="Center"/>
+        </materialDesign:ColorZone>
     </Grid>
 </Window>

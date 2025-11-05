@@ -3,75 +3,99 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="定型文編集" Height="500" Width="600"
-        WindowStartupLocation="CenterOwner">
+        Title="定型文編集"
+        Height="550" Width="650"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
+        FontFamily="{materialDesign:MaterialDesignFont}"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto">
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- タイトル入力 -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="タイトル:" FontSize="14" Margin="0,0,0,5"/>
-            <TextBox x:Name="TitleTextBox" FontSize="14" Padding="5"/>
-        </StackPanel>
-
-        <!-- セクション入力 -->
-        <StackPanel Grid.Row="1" Margin="0,0,0,10">
-            <TextBlock Text="セクション:" FontSize="14" Margin="0,0,0,5"/>
-            <ComboBox x:Name="SectionComboBox"
-                      IsEditable="True"
-                      FontSize="14"
-                      Padding="5"/>
-        </StackPanel>
-
-        <!-- 概要入力 -->
-        <StackPanel Grid.Row="2" Margin="0,0,0,10">
-            <TextBlock Text="概要:" FontSize="14" Margin="0,0,0,5"/>
-            <TextBox x:Name="SummaryTextBox"
-                     FontSize="14"
-                     Padding="5"/>
-        </StackPanel>
-
-        <!-- 本文入力 -->
-        <Grid Grid.Row="3" Margin="0,0,0,10">
+    <materialDesign:Card Margin="16" Padding="24">
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Text="本文:" FontSize="14" Margin="0,0,0,5"/>
-            <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1">
-                <TextBox x:Name="BodyTextBox"
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Auto"
-                         FontSize="14"
-                         Padding="5"/>
-            </Border>
-        </Grid>
+            <!-- ヘッダー -->
+            <TextBlock Grid.Row="0"
+                       Text="定型文を編集"
+                       Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                       Margin="0,0,0,24"/>
 
-        <!-- ボタン -->
-        <StackPanel Grid.Row="4"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right">
-            <Button x:Name="SaveButton"
-                    Content="保存"
-                    Width="100"
-                    Padding="10,5"
-                    Margin="0,0,10,0"
-                    Click="SaveButton_Click"/>
-            <Button x:Name="CancelButton"
-                    Content="キャンセル"
-                    Width="100"
-                    Padding="10,5"
-                    Click="CancelButton_Click"/>
-        </StackPanel>
-    </Grid>
+            <!-- タイトル入力 -->
+            <TextBox Grid.Row="1"
+                     x:Name="TitleTextBox"
+                     Margin="0,0,0,16"
+                     materialDesign:HintAssist.Hint="タイトル"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+            <!-- セクション入力 -->
+            <ComboBox Grid.Row="2"
+                      x:Name="SectionComboBox"
+                      IsEditable="True"
+                      Margin="0,0,0,16"
+                      materialDesign:HintAssist.Hint="セクション"
+                      Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+            <!-- 概要入力 -->
+            <TextBox Grid.Row="3"
+                     x:Name="SummaryTextBox"
+                     Margin="0,0,0,16"
+                     materialDesign:HintAssist.Hint="概要（任意）"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+            <!-- 本文入力 -->
+            <TextBox Grid.Row="4"
+                     x:Name="BodyTextBox"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"
+                     Margin="0,0,0,24"
+                     MinLines="8"
+                     materialDesign:HintAssist.Hint="本文"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+            <!-- ボタン -->
+            <StackPanel Grid.Row="5"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                <Button x:Name="SaveButton"
+                        Click="SaveButton_Click"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Height="40"
+                        Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ContentSave"
+                                                 VerticalAlignment="Center"
+                                                 Margin="0,0,8,0"/>
+                        <TextBlock Text="保存"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button x:Name="CancelButton"
+                        Click="CancelButton_Click"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Height="40">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Cancel"
+                                                 VerticalAlignment="Center"
+                                                 Margin="0,0,8,0"/>
+                        <TextBlock Text="キャンセル"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </materialDesign:Card>
 </Window>
