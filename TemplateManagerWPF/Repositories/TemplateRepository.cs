@@ -47,17 +47,29 @@ public class TemplateRepository
             {
                 var json = File.ReadAllText(_filePath);
                 _data = JsonSerializer.Deserialize<TemplateData>(json) ?? new TemplateData();
+
+                if (_data.Templates != null)
+                {
+                    foreach (var t in _data.Templates)
+                    {
+                        if ((t.Sections == null || t.Sections.Count == 0) && !string.IsNullOrEmpty(t.OldSection))
+                        {
+                            t.Sections = new List<string> { t.OldSection };
+                        }
+
+                        // nullガード（後続の処理でエラーにならないように）
+                        t.Sections ??= new List<string>();
+                    }
+                }
             }
             else
             {
-                // ファイルが存在しない場合は初期データで作成
                 _data = new TemplateData();
                 SaveToJson();
             }
         }
         catch (Exception ex)
         {
-            // エラー時は空のデータで初期化
             _data = new TemplateData();
             throw new Exception($"JSONファイルの読み込みに失敗しました: {ex.Message}", ex);
         }
@@ -119,10 +131,11 @@ public class TemplateRepository
     /// <summary>
     /// セクション別に定型文を取得
     /// </summary>
-    public List<Template> GetBySection(string section)
+    public List<Template> GetBySections(IEnumerable<string> sectionNames)
     {
+        // 選択されたセクションのいずれか1つでも持っているテンプレートを返す
         return _data.Templates
-            .Where(t => t.Section.Equals(section, StringComparison.OrdinalIgnoreCase))
+            .Where(t => t.Sections.Any(s => sectionNames.Contains(s)))
             .ToList();
     }
 
@@ -131,21 +144,14 @@ public class TemplateRepository
     /// </summary>
     public List<string> GetSections()
     {
-        return _data.Templates
-            .Select(t => t.Section)
-            .Distinct()
+        var allTemplates = GetAll();
+
+        return allTemplates
+            .SelectMany(t => t.Sections)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct() 
             .OrderBy(s => s)
             .ToList();
-    }
-
-    /// <summary>
-    /// セクション別の定型文数を取得
-    /// </summary>
-    public Dictionary<string, int> GetSectionCounts()
-    {
-        return _data.Templates
-            .GroupBy(t => t.Section)
-            .ToDictionary(g => g.Key, g => g.Count());
     }
 
     /// <summary>
@@ -178,9 +184,10 @@ public class TemplateRepository
         // 既存のデータを更新
         existing.Title = template.Title;
         existing.Body = template.Body;
-        existing.Section = template.Section;
+        existing.Sections = template.Sections;
         existing.Summary = template.Summary;
         existing.UpdatedAt = DateTime.Now;
+        existing.LastUsedDate = DateTime.Now;
 
         SaveToJson();
     }

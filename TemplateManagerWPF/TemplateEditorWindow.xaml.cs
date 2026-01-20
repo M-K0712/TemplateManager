@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using TemplateManagerWPF.Models;
@@ -15,35 +17,27 @@ public partial class TemplateEditorWindow : Window
     /// </summary>
     public Template? ResultTemplate { get; private set; }
 
-    /// <summary>
-    /// 編集モードかどうか（true: 編集、false: 新規登録）
-    /// </summary>
     private readonly bool _isEditMode;
-
-    /// <summary>
-    /// 編集対象の定型文（編集モードの場合のみ）
-    /// </summary>
     private readonly Template? _originalTemplate;
+
+    // チェックボックス管理用のコレクション
+    private ObservableCollection<SectionFilterItem> _sectionItems = new();
 
     /// <summary>
     /// コンストラクタ（新規登録用）
     /// </summary>
-    /// <param name="existingSections">既存のセクション一覧</param>
     public TemplateEditorWindow(IEnumerable<string> existingSections)
     {
         InitializeComponent();
         _isEditMode = false;
         Title = "新規定型文登録";
 
-        // セクションのドロップダウンに既存セクションを設定
-        SectionComboBox.ItemsSource = existingSections.ToList();
+        SetupSections(existingSections, null);
     }
 
     /// <summary>
     /// コンストラクタ（編集用）
     /// </summary>
-    /// <param name="template">編集対象の定型文</param>
-    /// <param name="existingSections">既存のセクション一覧</param>
     public TemplateEditorWindow(Template template, IEnumerable<string> existingSections)
     {
         InitializeComponent();
@@ -51,14 +45,50 @@ public partial class TemplateEditorWindow : Window
         _originalTemplate = template;
         Title = "定型文編集";
 
-        // セクションのドロップダウンに既存セクションを設定
-        SectionComboBox.ItemsSource = existingSections.ToList();
-
         // 既存の値を設定
         TitleTextBox.Text = template.Title;
-        SectionComboBox.Text = template.Section;
         SummaryTextBox.Text = template.Summary;
         BodyTextBox.Text = template.Body;
+
+        SetupSections(existingSections, template.Sections);
+    }
+
+    /// <summary>
+    /// セクションリストの初期セットアップ
+    /// </summary>
+    private void SetupSections(IEnumerable<string> allSections, List<string>? selectedSections)
+    {
+        var items = allSections.Select(s => new SectionFilterItem
+        {
+            Name = s,
+            IsSelected = selectedSections?.Contains(s) ?? false
+        }).OrderBy(x => x.Name);
+
+        _sectionItems = new ObservableCollection<SectionFilterItem>(items);
+        ExistingSectionsListBox.ItemsSource = _sectionItems;
+    }
+
+    /// <summary>
+    /// 新規セクション追加ボタン
+    /// </summary>
+    private void AddSection_Click(object sender, RoutedEventArgs e)
+    {
+        var newName = NewSectionTextBox.Text.Trim();
+        if (string.IsNullOrEmpty(newName)) return;
+
+        // 重複チェック
+        if (!_sectionItems.Any(x => x.Name.Equals(newName, StringComparison.OrdinalIgnoreCase)))
+        {
+            _sectionItems.Add(new SectionFilterItem { Name = newName, IsSelected = true });
+            NewSectionTextBox.Clear();
+        }
+        else
+        {
+            // すでにある場合はチェックを入れる
+            var existing = _sectionItems.FirstOrDefault(x => x.Name.Equals(newName, StringComparison.OrdinalIgnoreCase));
+            if (existing != null) existing.IsSelected = true;
+            NewSectionTextBox.Clear();
+        }
     }
 
     /// <summary>
@@ -73,9 +103,15 @@ public partial class TemplateEditorWindow : Window
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(SectionComboBox.Text))
+        // チェックが入っているセクションをリスト化
+        var selectedSections = _sectionItems
+            .Where(x => x.IsSelected)
+            .Select(x => x.Name)
+            .ToList();
+
+        if (!selectedSections.Any())
         {
-            MessageBox.Show("セクションを入力してください。", "入力エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("セクションを少なくとも1つ選択または入力してください。", "入力エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -85,31 +121,29 @@ public partial class TemplateEditorWindow : Window
             return;
         }
 
-        // 結果の定型文を作成
         if (_isEditMode && _originalTemplate != null)
         {
-            // 編集モード: 既存のテンプレートを更新
             ResultTemplate = new Template
             {
                 Id = _originalTemplate.Id,
                 Title = TitleTextBox.Text.Trim(),
-                Section = SectionComboBox.Text.Trim(),
+                Sections = selectedSections,
                 Summary = SummaryTextBox.Text.Trim(),
                 Body = BodyTextBox.Text,
                 CreatedAt = _originalTemplate.CreatedAt,
-                UpdatedAt = _originalTemplate.UpdatedAt // Repositoryで更新される
+                UpdatedAt = DateTime.Now
             };
         }
         else
         {
-            // 新規登録モード: 新しいテンプレートを作成
             ResultTemplate = new Template
             {
                 Title = TitleTextBox.Text.Trim(),
-                Section = SectionComboBox.Text.Trim(),
+                Sections = selectedSections,
                 Summary = SummaryTextBox.Text.Trim(),
-                Body = BodyTextBox.Text
-                // Id, CreatedAt, UpdatedAtはRepositoryで設定される
+                Body = BodyTextBox.Text,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
             };
         }
 

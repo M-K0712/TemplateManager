@@ -61,14 +61,7 @@ public partial class MainViewModel : ObservableObject
     /// セクション一覧
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<string> _sections;
-
-    /// <summary>
-    /// 選択中のセクション
-    /// </summary>
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(FilterBySectionCommand))]
-    private string? _selectedSection;
+    private ObservableCollection<SectionFilterItem> _sectionFilters = new();
 
     /// <summary>
     /// ステータスメッセージ
@@ -80,9 +73,22 @@ public partial class MainViewModel : ObservableObject
     {
         _repository = new TemplateRepository();
         _templates = new ObservableCollection<Template>();
-        _sections = new ObservableCollection<string>();
+        _sectionFilters = new ObservableCollection<SectionFilterItem>();
 
         LoadData();
+    }
+
+    // フィルタモード
+    [ObservableProperty]
+    private bool _isAndFilter = false; // デフォルトは OR (false)
+
+    /// <summary>
+    /// モードが切り替えられたときに呼ばれる
+    /// </summary>
+    /// <param name="value"></param>
+    partial void OnIsAndFilterChanged(bool value)
+    {
+        ApplyFilters();
     }
 
     /// <summary>
@@ -94,19 +100,6 @@ public partial class MainViewModel : ObservableObject
         EditableBody = value?.Body ?? string.Empty;
     }
 
-    /// <summary>
-    /// 選択されたセクションが変更されたときに呼ばれる
-    /// </summary>
-    partial void OnSelectedSectionChanged(string? value)
-    {
-        // 初期化中やnullへの変更は無視（無限ループ防止）
-        if (_isInitializing)
-        {
-            return;
-        }
-
-        FilterBySection();
-    }
 
     private bool _isInitializing = false;
 
@@ -120,11 +113,19 @@ public partial class MainViewModel : ObservableObject
         {
             // 全定型文を取得
             var allTemplates = _repository.GetAll();
-            Templates = new ObservableCollection<Template>(allTemplates);
+            SetSortedTemplates(allTemplates);
 
-            // セクション一覧を取得
-            var allSections = _repository.GetSections();
-            Sections = new ObservableCollection<string>(allSections);
+            // セクション一覧（List<string>）を取得
+            var allSectionNames = _repository.GetSections();
+            var filterItems = allSectionNames.Select(name => new SectionFilterItem
+            {
+                Name = name,
+                IsSelected = false,
+                // チェックが変わったときにフィルタリングを実行する
+                OnFilterChanged = () => ApplyFilters()
+            });
+
+            SectionFilters = new ObservableCollection<SectionFilterItem>(filterItems);
 
             StatusMessage = $"定型文 {Templates.Count} 件を読み込みました";
         }
@@ -135,61 +136,12 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 検索コマンド
+    /// 検索
     /// </summary>
     [RelayCommand]
     private void Search()
     {
-        try
-        {
-            var allTemplates = _repository.GetAll();
-
-            if (string.IsNullOrWhiteSpace(SearchKeyword))
-            {
-                Templates = new ObservableCollection<Template>(allTemplates);
-                StatusMessage = $"全件表示: {Templates.Count} 件";
-                return;
-            }
-
-            var results = SearchTarget switch
-            {
-                "タイトル" => allTemplates.Where(t => t.Title.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase)).ToList(),
-                "概要" => allTemplates.Where(t => t.Summary.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase)).ToList(),
-                "本文" => allTemplates.Where(t => t.Body.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase)).ToList(),
-                _ => allTemplates.Where(t => t.Title.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase)).ToList()
-            };
-
-            Templates = new ObservableCollection<Template>(results);
-            StatusMessage = $"検索結果({SearchTarget}): {Templates.Count} 件";
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"検索エラー: {ex.Message}";
-        }
-    }
-
-    /// <summary>
-    /// セクションでフィルタ
-    /// </summary>
-    [RelayCommand]
-    private void FilterBySection()
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(SelectedSection))
-            {
-                LoadData();
-                return;
-            }
-
-            var results = _repository.GetBySection(SelectedSection);
-            Templates = new ObservableCollection<Template>(results);
-            StatusMessage = $"セクション「{SelectedSection}」: {Templates.Count} 件";
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"フィルタエラー: {ex.Message}";
-        }
+        ApplyFilters();
     }
 
     /// <summary>
@@ -198,7 +150,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void CopyToClipboard()
     {
-        if (string.IsNullOrWhiteSpace(EditableBody))
+        if (SelectedTemplate == null || string.IsNullOrWhiteSpace(EditableBody))
         {
             StatusMessage = "コピーする内容がありません";
             return;
@@ -207,8 +159,10 @@ public partial class MainViewModel : ObservableObject
         var success = ClipboardHelper.CopyToClipboard(EditableBody);
         if (success)
         {
+            SelectedTemplate.LastUsedDate = DateTime.Now;
             var templateName = SelectedTemplate?.Title ?? "編集した内容";
             StatusMessage = $"「{templateName}」をクリップボードにコピーしました";
+            _repository.Update(SelectedTemplate);
         }
         else
         {
@@ -224,7 +178,12 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
-            var dialog = new TemplateEditorWindow(Sections);
+            // SectionFilters(SectionFilterItem型) から 名前(string) だけを抜き出してリストにする
+            var existingSectionNames = SectionFilters.Select(x => x.Name).ToList();
+
+            // 文字列のリストを渡す
+            var dialog = new TemplateEditorWindow(existingSectionNames);
+
             if (dialog.ShowDialog() == true && dialog.ResultTemplate != null)
             {
                 _repository.Add(dialog.ResultTemplate);
@@ -252,11 +211,16 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
-            var dialog = new TemplateEditorWindow(SelectedTemplate, Sections);
+            // 現在存在するセクション名のリストを作成
+            var existingSectionNames = SectionFilters.Select(x => x.Name).ToList();
+
+            // 文字列リストとして渡す
+            var dialog = new TemplateEditorWindow(SelectedTemplate, existingSectionNames);
+
             if (dialog.ShowDialog() == true && dialog.ResultTemplate != null)
             {
                 _repository.Update(dialog.ResultTemplate);
-                LoadData();
+                ApplyFilters();
                 StatusMessage = $"「{dialog.ResultTemplate.Title}」を更新しました";
             }
         }
@@ -295,9 +259,9 @@ public partial class MainViewModel : ObservableObject
         {
             var templateTitle = SelectedTemplate.Title;
             _repository.Delete(SelectedTemplate.Id);
-            LoadData();
-            StatusMessage = $"「{templateTitle}」を削除しました";
             SelectedTemplate = null;
+            ApplyFilters();
+            StatusMessage = $"「{templateTitle}」を削除しました";
         }
         catch (Exception ex)
         {
@@ -315,7 +279,6 @@ public partial class MainViewModel : ObservableObject
         try
         {
             SearchKeyword = string.Empty;
-            SelectedSection = null;
         }
         finally
         {
@@ -323,5 +286,83 @@ public partial class MainViewModel : ObservableObject
         }
 
         LoadData();
+    }
+
+    /// <summary>
+    /// 与えられたリストを「使用順 ＞ 更新順」でソートしてTemplatesにセットする
+    /// </summary>
+    private void SetSortedTemplates(IEnumerable<Template> source)
+    {
+        var sorted = source
+            .OrderByDescending(t => t.LastUsedDate ?? DateTime.MinValue)
+            .ThenByDescending(t => t.UpdatedAt)
+            .ToList();
+
+        Templates = new ObservableCollection<Template>(sorted);
+    }
+
+    private void ApplyFilters()
+    {
+        if (_isInitializing) return;
+
+        try
+        {
+            // 1. 全件取得
+            var results = _repository.GetAll().AsEnumerable();
+
+            // 2. キーワード検索（コンボボックスの選択を反映）
+            if (!string.IsNullOrWhiteSpace(SearchKeyword))
+            {
+                var keyword = SearchKeyword.ToLower();
+
+                // SearchTarget (タイトル/概要/本文) に応じてフィルタ条件を切り替え
+                results = results.Where(t =>
+                {
+                    return SearchTarget switch
+                    {
+                        "タイトル" => t.Title?.ToLower().Contains(keyword) == true,
+                        "概要" => t.Summary?.ToLower().Contains(keyword) == true,
+                        "本文" => t.Body?.ToLower().Contains(keyword) == true,
+                        _ => t.Title?.ToLower().Contains(keyword) == true // デフォルト
+                    };
+                });
+            }
+
+            // 3. セクション絞り込み（ここは現状維持）
+            var selectedSections = SectionFilters
+                .Where(x => x.IsSelected)
+                .Select(x => x.Name)
+                .ToList();
+
+            if (selectedSections.Any())
+            {
+                if (IsAndFilter)
+                    results = results.Where(t => selectedSections.All(s => t.Sections != null && t.Sections.Contains(s)));
+                else
+                    results = results.Where(t => selectedSections.Any(s => t.Sections != null && t.Sections.Contains(s)));
+            }
+
+            // 4. 結果の反映
+            var finalResults = results.ToList(); // 一度リスト化
+
+            // 5. 検索結果が0件の場合のメッセージ処理
+            if (!finalResults.Any())
+            {
+                Templates.Clear(); // 表示を空にする
+                StatusMessage = "該当する定型文は見つかりませんでした。";
+                return;
+            }
+
+            // 6. ソートして反映
+            SetSortedTemplates(finalResults);
+
+            // 7. ステータスメッセージ更新
+            string targetInfo = !string.IsNullOrWhiteSpace(SearchKeyword) ? $"対象:[{SearchTarget}] " : "";
+            StatusMessage = $"{targetInfo}結果: {Templates.Count} 件を表示中";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"フィルタエラー: {ex.Message}";
+        }
     }
 }
